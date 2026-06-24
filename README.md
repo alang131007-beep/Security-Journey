@@ -42,3 +42,27 @@ Next session
 
 Phase 2: Linux hardening — SSH hardening, ufw/iptables, logs and monitoring.
 Pending concept: how to hide service versions (banner grabbing mitigation).
+
+## Cybersecurity — Phase 2: Nmap and Network Scanning
+
+**Date:** 23/06/26
+
+### Concepts learned
+I learned scanning local network, IPS and MAC addresses, I learned identify real threats on my router, identify crucial ports in my terminal, analysis services in real time, Capture DNS live and discovery hosts 
+
+### Hands-on practice
+in this practice I use "ip a | grep "inet " | grep -v 127" as discovery my personal IP and my network range, "nmap -sn 192.168.0.0/24 | grep -E "Host|MAC"" this command to list  the IPS and MAC adresses in my house, "nmap -sV 192.168.0.1" this command show the open ports and finally "ss -tuln" with this command I see my machine connections
+
+### Key takeaways
+- ss shows open ports from inside your own machine. 
+  nmap shows what an outsider would see. Both perspectives 
+  together is how a blue teamer thinks.
+- UPnP on routers is a real risk — any infected device 
+  on your network can ask the router to open ports 
+  without your knowledge.
+- nmap identified my machine by hostname (Tachyon.local) 
+  without any special configuration — that's what an 
+  attacker inside the network would also see.
+
+### Next session
+Phase 2: Linux hardening — SSH hardening, ufw/iptables, logs and monitoring.
