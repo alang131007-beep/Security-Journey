@@ -66,3 +66,50 @@ in this practice I use "ip a | grep "inet " | grep -v 127" as discovery my perso
 
 ### Next session
 Phase 2: Linux hardening — SSH hardening, ufw/iptables, logs and monitoring.
+
+## Cybersecurity — Phase 2: SSH Hardening
+
+**Date:** [25/06/26]
+
+### Concepts learned
+I used fail2ban, this program allow rules what define who monitor, how many failed attempts allow and for how long time ban the ip , the passphrase is a unique password with which enter to see the secret key, 
+I added three lines, first, AllowUSers alanlinux, with it only allow my user, two, ClientAliveInterval 300, after 300 seconds the server send a signal with which verify if the client still here
+
+### Hands-on practice
+sudo sshd -T | grep -E "permitrootlogin|passwordauthentication|pubkeyauthentication|port" 
+with this command verify if I have the basic configuration for cibersecurity
+ 
+sudo nano /etc/ssh/sshd_config 
+-with this command i protected my machine changing my port 22 to port 2222 and permitroot login yes to permitroot login no
+
+sudo systemctl restart sshd
+-this is a simple command with which restart SSH 
+
+sudo apt install fail2ban, sudo systemctl status fail2ban
+-install and verify that application saved in my machine
+
+sudo nano /etc/fail2ban/jail.local
+-with this command I created and configured the jail and used "maxretry = 3", "bantime = 1h" and "findtime = 10m", first command, this command allow only three attempts,after 3 fail attempts the sistem ban the ip, the second command sets the time of ban which is 1 hours and three command, the three trys must be in 10 minutes
+
+sudo fail2ban-client status sshd
+-verify with this command the jail is active
+
+
+
+### Configuration changes made
+i configured three finall commands which limit who connect via SSH and one idle timeout which if one session remains open this automatic close 
+
+1.AllowUsers alanlinux 
+only my user can connect via SSH with this command, any other user it gets blocked
+
+2.ClientAliveInterval 300
+the server send a sign which verify if the client remains here
+
+3.ClientAliveCountMax 2 
+if the client doesn't respond 2 times in a row, close the session 
+
+### Key takeaways
+I dont forget my passphrase, A private key without a passphrase is a security risk, if someone steals the file, they can use it directly.
+
+### Next session
+Phase 2: Firewall configuration with ufw — rules, policies, and enterprise documentation approach.
