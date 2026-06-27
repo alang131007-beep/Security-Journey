@@ -135,3 +135,72 @@ sudo ufw status verbose ssh alanlinux@localhost
 |-------|-------|----------|
 | locked out of SSH  | Actived ufw before allowing SSH port | Always allow SSH before enabling ufw |
 | Wrong port allowed | SSH running on 2222 but allowed 22 | Check actual port with "systemctl status ssh" before adding rules
+
+# Logs and Monitoring
+**Project:** Tachyon-01 Production Server  
+**Date:** 26/06/26
+
+---
+
+## What are logs?
+logs are a register of everything that happens, is they are first tool to detect what happened, why it happened, and who did it, in cibersecurity, is they are first step to review
+
+
+---
+
+## Important log files
+
+| File | Purpose |
+|------|---------|
+| /var/log/auth.log | Records login attempts, sudo commands and authentication events |
+| /var/log/nginx/access.log | Records every request made to the web server |
+| /var/log/nginx/error.log | Records nginx errors and failed requests |
+
+---
+
+## Commands used
+
+### Check auth logs
+```bash
+sudo cat /var/log/auth.log | tail -20
+```
+
+### Filter SSH events
+```bash
+sudo grep -E "Accepted|Failed" /var/log/auth.log
+```
+
+### Check nginx logs
+```bash
+sudo cat /var/log/nginx/access.log
+```
+
+### Real-time monitoring
+```bash
+sudo journalctl -u ssh -f
+ssh -p 2222 alanlinux@localhost
+```
+
+---
+
+## What to look for in logs
+
+"127.0.0.1 - - [24/Jun/2026:15:02:12 -0600] "GET / HTTP/1.1" 200 72 "-" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0"
+127.0.0.1 - - [24/Jun/2026:15:02:12 -0600] "GET /favicon.ico HTTP/1.1" 404 134 "http://nexus.local/" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0"
+
+In acess.log each lien shows: the visitor ip, the request page, the http status code, and the browser used. A 200 means success, 404 means file not found, 403 means acces denied. In a real server, unknown IPS or repeated 403 code could indicate a scan or attack
+---
+
+## SSH Monitor Script
+
+```bash
+#!/bin/bash
+echo "=== SSH Login Report - $(date) ===" >> ~/ssh-report.log
+sudo grep -E "Accepted|Failed" /var/log/auth.log >> ~/ssh-report.log
+```
+
+---
+
+## Key takeaways
+
+logs are the most important part in the field of cibersecurity, they are the primary shield and the first step to investigate if the system has been compromised
