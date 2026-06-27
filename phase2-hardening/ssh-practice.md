@@ -66,3 +66,72 @@ ssh -o PreferredAuthentications=password alanlinux@localhost
 |-------|-------|----------|
 | Permission Denied | Wrong key or password auth disabled | verify key is with ssh-copy-id |
 | SSH inative | Service not started | sudo systemctl enable --now ssh
+
+# UFW Firewall Configuration
+**Project:** Tachyon-01 Production Server 
+**Date:** 26/06/26
+
+---
+
+## What is UFW?
+ufw is a simple interface that allow you to manage the rules of firewalls in Linux, designed for avoid complex configurations in fast ans secure way
+
+
+---
+
+## What was configured
+I configured the rules to allow SSH, and HTTP and enabled ufw, I opened only the necessary ports to achieve the minimun security configurations for network server 
+
+
+---
+
+## Commands used
+
+### Check firewall status
+```bash
+sudo ufw status
+```
+
+### Allow ports
+```bash
+sudo ufw allow 2222/tcp
+```
+
+### Enable firewall
+```bash
+sudo ufw enable 
+```
+
+### Verify rules
+```bash
+sudo ufw status verbose ssh alanlinux@localhost
+```
+
+---
+
+## Active rules
+
+| Port | Protocol | Action | Reason |
+|------|----------|--------|--------|
+| 2222 | TCP      | ALLOW  | SSH acces |
+| 80   | TCP      | ALLOW  | HTTP web server |
+| Any  | Any      | DENY   | Default-block everything else |
+---
+
+## Key concepts
+
+| Term | Description |
+|------|-------------|
+| UFW | Uncomplicated firewall - Frontend for iptables  |
+|Inbound | Traffic coming into server |
+|Outbound | Traffic leaving the server | 
+|Default deny | block all incoming unless explicitly allowed |
+
+---
+
+## Common errors
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| locked out of SSH  | Actived ufw before allowing SSH port | Always allow SSH before enabling ufw |
+| Wrong port allowed | SSH running on 2222 but allowed 22 | Check actual port with "systemctl status ssh" before adding rules
