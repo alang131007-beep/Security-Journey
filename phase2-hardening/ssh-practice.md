@@ -189,6 +189,7 @@ ssh -p 2222 alanlinux@localhost
 127.0.0.1 - - [24/Jun/2026:15:02:12 -0600] "GET /favicon.ico HTTP/1.1" 404 134 "http://nexus.local/" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0"
 
 In acess.log each lien shows: the visitor ip, the request page, the http status code, and the browser used. A 200 means success, 404 means file not found, 403 means acces denied. In a real server, unknown IPS or repeated 403 code could indicate a scan or attack
+
 ---
 
 ## SSH Monitor Script
