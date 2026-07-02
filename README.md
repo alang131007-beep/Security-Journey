@@ -176,3 +176,81 @@ Phase 2: Firewall configuration with ufw — rules, policies, and enterprise doc
 ## Pending — Phase 2
 - [ ] AppArmor
 - [ ] CIS Benchmarks
+
+# Phase 2 — AppArmor (Tachyon-01)
+
+## What is AppArmor
+-it is a kernel-level security module that restricts 
+-works through profiles that define which archives, directorys and network connections an application can acces
+
+## Initial State
+- 237 profiles loaded: 159 enforce, 3 complain, 75 unconfined
+- No native nginx or openssh-server profiles found
+- All existing profiles belong to snap/desktop applications
+
+## Building the nginx Profile from Scratch
+
+### Tools used
+- aa-genprof — is the interactive tool used to generated security profile from scratch 
+- aa-logprof — used to update, scan system logs to update security profile alredy existing 
+- aa-complain / aa-enforce — "aa-complain" allow the action and logs it, "aa-enfoce" block unauthorized actions and logs them.
+
+### Profile decisions made (aa-logprof)
+
+#### Capabilities allowed
+- dac_override —  it is a capacity of full skip the traditional file permissions
+- net_bind_service — allow a proccess associate to a network privileged port
+- setgid — allow change the identificator of group arbitrarily
+- setuid — allow change the identificator of user arbitrarily
+
+#### Network rules
+- create, bind, listen, setopt → allowed during aa-logprof
+- accept, receive, send → NOT captured by aa-logprof, added manually later
+
+#### File paths
+- /etc/nginx/* — contains nginx configuration files - read acces required at startup can be use the web server
+- /var/log/nginx/ — in this directory the web server stores access and error logs
+- /run/nginx.pid — is the temporary file which nginx stores the process ID (PID)
+- /etc/passwd, /etc/nsswitch.conf — passwd contain the list of all users in the system, home directories and the numeric ID's, nsswitch define the order in which the system resolve names (users, hosts)
+- /var/www/html/ — is the root directory default in the linux system for storing public web content in the website
+
+## Debugging Sequence (enforce mode)
+
+### Error 1 — accept4() failed
+- Symptom: nginx connect but did not respond at all.
+- Diagnosed via: diagnosed via /var/log/nginx/error.log and /var/log/audit.log using grep denied /etc/apparmor.d/usr.sbin.nginx
+- Root cause: the profile have configured, bind, create, listen and setopt but not accept 
+- Fix: with "sudo nano /etc/apparmor.d/sbin.nginx/" i added network (accept) inet/inet6 stream port=80 to the profile
+
+### Error 2 — recv() failed
+- Symptom: at the moment to try again actived the curl, the server don't respond 
+- Diagnosed via: with systemctl and ausearch, i identified the problem
+- Root cause: Apparmor was deying the receive operation, which is separate from accept in "etc/apparmor.d/usr.sbin.nginx"
+- Fix: i edited with nano again some lines in the archive, specifically, "network (receive) inet stream port=80
+
+### Error 3 — writev() failed + open() index.html failed
+- Symptom: the same problem as before, when calling localhost, this don't respond me 
+- Diagnosed via: i used the same procces as before
+- Root cause: i realized that the problem right now is, two thing were missing, "send (writev())" and "/var/www/html/index.html"
+- Fix: i haved edit with nano, i added these lines "network (send) inet stream port=80" and "owner /var/www/html/ r,", i have to delete the word owner because the output showed error 403
+
+### Error 4 — 403 Forbidden
+- Symptom: a new problem, curl now received a response, but with a new line "403 Forbidden"
+- Diagnosed via: with "ls -la /var/www/html/, i see the outpout and I realized the all permission were perfect.
+- Root cause:but this have one problem, the file is owned by root, but nginx run like www-data, this combination results in the error 403 
+- Fix: i haved edit once again but instead of adding, i removed the word "owner" in the line "owner /var/www/html/ r," and "owner /var/www/html/index.html r,"
+
+## Key Concepts
+- AppArmor enforce vs complain: complain mode allow all operations, it is used for, development, proofs and creation of profiles, meanwhile enforce, block any operation. the risk of use this operation is high, but it is used for production and active protection for the system
+- TCP cycle in AppArmor (create → bind → listen → accept → receive → send): accept, receive and send were not capture by aa-logprof because the tool only records events that ocurrred while nginx was running in complaind mode - these three operations were not triggered during the learning session and had to be added manually by reading the audit log
+- owner qualifier vs Unix permissions: with unix permissions, unix checks the permission bits of lecture and executions (rwx) and it is static for the owner, group and other, meanwhile owner qualifier, aplied only to the process/program at runtime, review if the UID in the process coincides with the UID of the file owner 
+- Why aa-logprof doesn't always capture everything: logprof only captures events that were logged while the service ran in complain mode - if an operation was not triggered during that window, it will not appear and must be added manually "aa-logprof"
+
+## Final State
+- Profile: /etc/apparmor.d/usr.sbin.nginx
+- Mode: enforce
+- curl http://localhost → HTML response served sucessfully 
+- curl http://nexus.local → HTML response served sucessfully 
+
+## Pending — Phase 2
+- [ ] CIS Benchmarks
